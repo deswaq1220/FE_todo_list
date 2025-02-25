@@ -1,35 +1,22 @@
-import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
-import './App.css';
+import { RecoilRoot } from 'recoil';
+import AddTodo from './components/AddTodo';
+import SearchInput from './components/SearchInput';
+import TodoList from './components/TodoList';
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <div className='font-scoreDream'>
-      <p>vhs</p>
-      <div>
-        <a href='https://vite.dev' target='_blank'>
-          <img src={viteLogo} className='logo' alt='Vite logo' />
-        </a>
-        <a href='https://react.dev' target='_blank'>
-          <img src={reactLogo} className='logo react' alt='React logo' />
-        </a>
+    <RecoilRoot>
+      <div className='flex h-screen w-full justify-center bg-gray-50'>
+        <div className='w-[700px] p-5'>
+          <h1 className='mb-2 text-2xl'>투두네이션</h1>
+          <div className='flex flex-col gap-y-3'>
+            <SearchInput />
+            <AddTodo />
+            <TodoList />
+          </div>
+        </div>
       </div>
-      <h1 className='text-2xl text-red-300'>Vite + React</h1>
-      <div className='card'>
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className='read-the-docs'>
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
+    </RecoilRoot>
   );
 }
 
