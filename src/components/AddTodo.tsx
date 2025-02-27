@@ -2,7 +2,7 @@ import PriorityBadge from './PriorityBadge';
 import { useRecoilState } from 'recoil';
 import { todoInputState } from '../recoil/atoms/todoState';
 
-function AddTodo() {
+const AddTodo = () => {
   const [inputValue, setInputValue] = useRecoilState(todoInputState);
   return (
     <div className='flex flex-col gap-y-3'>
@@ -18,6 +18,6 @@ function AddTodo() {
       <PriorityBadge />
     </div>
   );
-}
+};
 
 export default AddTodo;

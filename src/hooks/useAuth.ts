@@ -19,7 +19,7 @@ interface LoginData {
   password: string;
 }
 
-export const useAuth = () => {
+const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,3 +119,4 @@ export const useAuth = () => {
     error,
   };
 };
+export default useAuth;

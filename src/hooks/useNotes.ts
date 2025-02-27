@@ -9,7 +9,7 @@ type TodoWithNotes = {
   notes?: string;
 };
 
-export const useNotes = (todo: TodoWithNotes) => {
+const useNotes = (todo: TodoWithNotes) => {
   const [showNotes, setShowNotes] = useState(false);
   const [editNotes, setEditNotes] = useState(todo.notes || '');
   const [hasUnsavedNotes, setHasUnsavedNotes] = useState(false);
@@ -96,3 +96,4 @@ export const useNotes = (todo: TodoWithNotes) => {
     setShowNotes,
   };
 };
+export default useNotes;
