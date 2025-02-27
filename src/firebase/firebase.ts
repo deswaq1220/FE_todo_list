@@ -3,6 +3,9 @@ import { initializeApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 import { getStorage } from 'firebase/storage';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { setPersistence, browserLocalPersistence } from 'firebase/auth';
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -20,8 +23,18 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const storage = getStorage(app);
 const database = getFirestore(app);
 
-export { storage, database };
+// 인증 지속성 설정
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('인증 상태 지속성 설정 완료');
+  })
+  .catch((error) => {
+    console.error('인증 상태 지속성 설정 오류:', error);
+  });
+
+export { storage, database, auth };

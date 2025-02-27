@@ -11,7 +11,7 @@ const SearchInput = () => {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder='할 일 검색'
-        className='w-full rounded-lg bg-white py-2 pr-4 pl-10 ring-1 ring-gray-200 transition-all focus:outline-none'
+        className='w-60 rounded-lg bg-white py-2 pr-4 pl-10 ring-1 ring-gray-200 transition-all focus:outline-none'
       />
     </div>
   );

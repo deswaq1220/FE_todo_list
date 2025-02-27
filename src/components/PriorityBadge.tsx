@@ -7,33 +7,33 @@ const PriorityBadge = () => {
   const priorityStyles = {
     high: {
       bg: 'bg-rose-50',
-      ring: 'ring-1 ring-rose-700',
+      ring: 'ring-1 ring-todayPink',
       badge: 'bg-rose-500',
       hover: 'hover:bg-rose-100',
-      text: 'text-rose-700',
+      text: 'text-todayPink',
       label: '높음',
     },
     medium: {
       bg: 'bg-amber-600/10',
-      ring: 'ring-1 ring-amber-600',
+      ring: 'ring-1 ring-todayYellow',
       badge: 'bg-amber-600',
       hover: 'hover:bg-amber-600/10',
-      text: 'text-amber-600',
+      text: 'text-todayYellow',
       label: '중간',
     },
     low: {
       bg: 'bg-emerald-50',
-      ring: 'ring-1 ring-emerald-700',
+      ring: 'ring-1 ring-todayGreen',
       badge: 'bg-emerald-500',
       hover: 'hover:bg-emerald-100',
-      text: 'text-emerald-700',
+      text: 'text-todayGreen',
       label: '낮음',
     },
   };
 
   return (
     <div className='flex items-center gap-4'>
-      <span className='text-sm font-medium text-gray-500'>우선순위:</span>
+      <span className='font-medium text-gray-700'>우선순위:</span>
       <div className='flex gap-2'>
         {Object.entries(priorityStyles).map(([priorityKey, style]) => (
           <button

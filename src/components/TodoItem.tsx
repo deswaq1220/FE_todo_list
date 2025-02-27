@@ -1,11 +1,13 @@
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { Priority, Todo } from '../recoil/atoms/todoState';
+import { Priority, Todo, activeNotesIdState } from '../recoil/atoms/todoState';
 import { GripVertical, Pen, X, Check, MessageSquare } from 'lucide-react';
 import { database } from '../firebase/firebase';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useState, useEffect } from 'react';
+import { useRecoilState } from 'recoil';
+import { useNotes } from '../hooks/useNotes';
 
 type TodoWithNotes = Todo & {
   notes?: string;
@@ -21,11 +23,18 @@ const TodoItem = ({ todo, onDelete, onUpdate }: TodoItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [editPriority, setEditPriority] = useState<Priority>(todo.priority);
+  const [activeNotesId, setActiveNotesId] = useRecoilState(activeNotesIdState);
 
-  // 메모 관련 상태
-  const [showNotes, setShowNotes] = useState(false);
-  const [editNotes, setEditNotes] = useState(todo.notes || '');
-  const [hasUnsavedNotes, setHasUnsavedNotes] = useState(false);
+  // 커스텀 훅 사용
+  const {
+    showNotes,
+    editNotes,
+    hasUnsavedNotes,
+    toggleNotes,
+    handleNotesChange,
+    saveNotes,
+    setShowNotes,
+  } = useNotes(todo);
 
   const firebaseId: UniqueIdentifier = todo.firebaseId as string;
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -40,26 +49,26 @@ const TodoItem = ({ todo, onDelete, onUpdate }: TodoItemProps) => {
     switch (priority) {
       case 'high':
         return {
-          bg: 'bg-rose-600/10',
-          text: 'text-rose-600',
-          ring: 'ring-rose-600',
-          dot: 'bg-rose-600',
+          bg: 'bg-todayRed/10',
+          text: 'text-todayRed',
+          ring: 'ring-todayRed',
+          dot: 'bg-todayRed',
           label: '높음',
         };
       case 'medium':
         return {
-          bg: 'bg-amber-600/10',
-          text: 'text-amber-600',
-          ring: 'ring-amber-600',
-          dot: 'bg-amber-600',
+          bg: 'bg-todayYellow/10',
+          text: 'text-todayYellow',
+          ring: 'ring-todayYellow',
+          dot: 'bg-todayYellow',
           label: '중간',
         };
       case 'low':
         return {
-          bg: 'bg-green-600/10',
-          text: 'text-green-600',
-          ring: 'ring-green-600',
-          dot: 'bg-green-600',
+          bg: 'bg-todayGreen/10',
+          text: 'text-todayGreen',
+          ring: 'ring-todayGreen',
+          dot: 'bg-todayGreen',
           label: '낮음',
         };
     }
@@ -118,67 +127,28 @@ const TodoItem = ({ todo, onDelete, onUpdate }: TodoItemProps) => {
     }
   };
 
-  const toggleNotes = () => {
-    if (isEditing) return; // 수정 중에는 메모 토글 비활성화
-
-    // 메모 창을 닫을 때 자동으로 저장
-    if (showNotes && hasUnsavedNotes) {
-      saveNotes();
-    }
-
-    setShowNotes(!showNotes);
-    // 메모가 처음 열릴 때 현재 메모 상태로 설정
-    if (!showNotes) {
-      setEditNotes(todo.notes || '');
-      setHasUnsavedNotes(false);
-    }
-  };
-
-  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditNotes(e.target.value);
-    setHasUnsavedNotes(true);
-  };
-
-  const saveNotes = async () => {
-    if (todo.firebaseId) {
-      try {
-        const updates = { notes: editNotes };
-        await updateDoc(doc(database, 'todos', todo.firebaseId), updates);
-        onUpdate(todo.firebaseId, updates);
-        setHasUnsavedNotes(false);
-      } catch (error) {
-        console.error('메모 저장 중 오류!:', error);
-      }
-    }
-  };
-
-  // 페이지 이탈 시 자동 저장 (beforeunload 이벤트)
+  // 현재 TodoItem의 메모가 활성화될 때 다른 메모 닫기를 위한 Recoil 상태 관리
   useEffect(() => {
-    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
-      if (hasUnsavedNotes && todo.firebaseId) {
-        // 페이지 이탈 전에 Firebase에 즉시 저장
-        try {
-          await updateDoc(doc(database, 'todos', todo.firebaseId), {
-            notes: editNotes,
-          });
-          // onUpdate 호출은 생략 (페이지 이탈 중이므로)
-        } catch (error) {
-          console.error('자동 저장 중 오류:', error);
-        }
-      }
-    };
+    if (showNotes && todo.firebaseId) {
+      setActiveNotesId(todo.firebaseId);
+    }
+  }, [showNotes, todo.firebaseId, setActiveNotesId]);
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [editNotes, hasUnsavedNotes, todo.firebaseId]);
+  // 다른 TodoItem의 메모가 활성화되면 현재 메모 닫기
+  useEffect(() => {
+    if (activeNotesId && activeNotesId !== todo.firebaseId && showNotes) {
+      // 닫기 전에 자동 저장
+      if (hasUnsavedNotes) {
+        saveNotes();
+      }
+      setShowNotes(false);
+    }
+  }, [activeNotesId, todo.firebaseId, showNotes, hasUnsavedNotes]);
 
   // todo 객체가 변경될 때 상태 업데이트
   useEffect(() => {
     setEditText(todo.text);
     setEditPriority(todo.priority);
-    setEditNotes(todo.notes || '');
   }, [todo]);
 
   // 수정 모드 UI
@@ -244,16 +214,16 @@ const TodoItem = ({ todo, onDelete, onUpdate }: TodoItemProps) => {
 
         <div className='flex gap-1'>
           <button
-            className='flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-green-600/10'
+            className='bg-todayGreen/10 flex h-6 w-6 cursor-pointer items-center justify-center rounded'
             onClick={handleSaveEdit}
           >
-            <Check size={16} color='#16a34a' />
+            <Check size={16} color='#72c18e' />
           </button>
           <button
-            className='flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-red-600/10'
+            className='bg-todayRed/10 flex h-6 w-6 cursor-pointer items-center justify-center rounded'
             onClick={() => setIsEditing(false)}
           >
-            <X size={16} color='#e7000b' />
+            <X size={16} color='#f95f5f' />
           </button>
         </div>
       </div>
@@ -309,24 +279,24 @@ const TodoItem = ({ todo, onDelete, onUpdate }: TodoItemProps) => {
           </span>
           <button
             className='relative flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-blue-600/10'
-            onClick={toggleNotes}
+            onClick={() => toggleNotes(isEditing)}
           >
-            <MessageSquare size={16} color='#2563eb' />
+            <MessageSquare size={16} color='#4e91fc' />
             {todo.notes && todo.notes.trim() !== '' && (
-              <span className='absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-blue-500'></span>
+              <span className='bg-todayBlue absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full'></span>
             )}
           </button>
           <button
-            className='flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-amber-600/10'
+            className='bg-todayYellow/10 flex h-6 w-6 cursor-pointer items-center justify-center rounded'
             onClick={handleEdit}
           >
-            <Pen size={16} color='#e17100' />
+            <Pen size={16} color='#fca430' />
           </button>
           <button
-            className='flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-red-600/10'
+            className='bg-todayRed/10 flex h-6 w-6 cursor-pointer items-center justify-center rounded'
             onClick={handleDelete}
           >
-            <X size={16} color='#e7000b' />
+            <X size={16} color='#f95f5f' />
           </button>
         </div>
       </div>
@@ -335,17 +305,19 @@ const TodoItem = ({ todo, onDelete, onUpdate }: TodoItemProps) => {
       {showNotes && !isEditing && (
         <div className='mt-2 mr-2 ml-9'>
           <div className='mb-1 flex items-center justify-between'>
-            <span className='text-xs text-gray-600'>메모</span>
+            <span className='text-xs text-gray-600'>상세내용</span>
             <div className='flex items-center'>
               {hasUnsavedNotes && (
-                <span className='mr-2 text-xs text-red-500'>저장되지 않음</span>
+                <span className='text-todayRed mr-2 text-xs'>
+                  저장되지 않음
+                </span>
               )}
               <button
                 onClick={() => {
                   saveNotes();
                   setShowNotes(false);
                 }}
-                className='text-xs text-blue-600 hover:text-blue-800'
+                className='text-todayBlue hover:text-todayNavy text-xs'
               >
                 저장
               </button>
