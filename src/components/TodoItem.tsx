@@ -7,7 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useState, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
-import { useNotes } from '../hooks/useNotes';
+import useNotes from '../hooks/useNotes';
 
 type TodoWithNotes = Todo & {
   notes?: string;

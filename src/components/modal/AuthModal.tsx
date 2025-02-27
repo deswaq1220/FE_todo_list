@@ -4,7 +4,7 @@ import { z as zod } from 'zod';
 import googleIcon from '../../assets/web_light_rd_na.svg';
 import { useState } from 'react';
 import AuthInput from '../AuthInput';
-import { useAuth } from '../../hooks/useAuth';
+import useAuth from '../../hooks/useAuth';
 
 export const loginFormSchema = zod.object({
   email: zod.string().email({ message: '이메일 형식이 아닙니다.' }),
@@ -77,6 +77,7 @@ const AuthModal = ({ onClose }: { onClose: () => void }) => {
         nickname: data.nickname,
       });
       console.log('회원가입 성공:', user);
+      loginForm.reset(); // 로그인 폼 초기화
       setIsLogin(true); // 로그인 모드로 전환
     } catch (err) {
       console.error('회원가입 실패:', err);
@@ -95,6 +96,13 @@ const AuthModal = ({ onClose }: { onClose: () => void }) => {
   };
 
   const toggleForm = () => {
+    if (isLogin) {
+      // 로그인 → 회원가입으로 전환
+      signupForm.reset();
+    } else {
+      // 회원가입 → 로그인으로 전환
+      loginForm.reset();
+    }
     setIsLogin(!isLogin);
   };
 
