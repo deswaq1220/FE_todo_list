@@ -17,7 +17,7 @@ const Memo = () => {
       </label>
       <textarea
         id='memo'
-        className='focus:border-todayBlue h-32 w-full resize-none rounded-lg border border-gray-300 p-3 text-gray-700 focus:outline-none'
+        className='focus:border-todayPink h-32 w-full resize-none rounded-lg border border-gray-300 p-3 text-gray-700 focus:outline-none'
         placeholder='메모를 입력해주세요'
         value={memo}
         onChange={handleChange}
